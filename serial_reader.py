@@ -4,14 +4,18 @@
 Reads from a serial port (COM3 on Windows, /dev/ttyUSB0 on Linux) and prints
 every received line. Kill with Ctrl+C.
 
-Usage examples:
+Usage examples (Windows):
     py serial_reader.py                       # interactive port picker, 115200 8N1
     py serial_reader.py --list                # just list available ports
     py serial_reader.py -p COM3 -b 9600
     py serial_reader.py -p COM3 -b 9600 --parity E --stopbits 2
     py serial_reader.py -p COM3 --timestamps --hexdump
 
-Requirements:  py -m pip install pyserial
+Usage examples (Linux/macOS):
+    python3 serial_reader.py -p /dev/ttyUSB0 -b 9600
+
+Requirements:  Windows:  py -m pip install pyserial
+               Linux/macOS: pip install pyserial (or: pip3 ...)
 """
 
 import argparse
@@ -22,8 +26,8 @@ try:
     import serial
     from serial.tools import list_ports
 except ImportError:
-    sys.exit("pyserial is not installed. Run:  pip install pyserial  "
-             "(or:  py -m pip install pyserial)")
+    sys.exit("pyserial is not installed. Windows:  py -m pip install pyserial;  "
+             "Linux/macOS:  pip install pyserial")
 
 
 def parse_args():

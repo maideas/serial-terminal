@@ -4,19 +4,23 @@
 Prints every line the device sends, and sends whatever you type (Enter to
 transmit). Kill with Ctrl+C.
 
-Usage examples:
+Usage examples (Windows):
     py serial_terminal.py                      # interactive port picker, 115200 8N1
     py serial_terminal.py --list
     py serial_terminal.py -p COM3 -b 9600
     py serial_terminal.py -p COM3 --eol lf     # send \\n instead of \\r\\n
     py serial_terminal.py -p COM3 --hexdump --timestamps
 
+Usage examples (Linux/macOS):
+    python3 serial_terminal.py -p /dev/ttyUSB0 -b 9600
+
 Special input prefixes:
     \\hex 41 42 0D    send raw bytes given as hex ("AB" -> 0x41 0x42 0x0D),
                      plus the configured line ending (--eol none to omit it)
     \\quit           same as Ctrl+C
 
-Requirements:  py -m pip install pyserial
+Requirements:  Windows:  py -m pip install pyserial
+               Linux/macOS: pip install pyserial (or: pip3 ...)
 """
 
 import argparse
@@ -28,8 +32,8 @@ try:
     import serial
     from serial.tools import list_ports
 except ImportError:
-    sys.exit("pyserial is not installed. Run:  pip install pyserial  "
-             "(or:  py -m pip install pyserial)")
+    sys.exit("pyserial is not installed. Windows:  py -m pip install pyserial;  "
+             "Linux/macOS:  pip install pyserial")
 
 EOL_CHOICES = {
     "crlf": b"\r\n",   # default for most devices / classic terminals
