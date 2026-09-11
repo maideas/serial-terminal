@@ -22,7 +22,9 @@ Usage examples (Linux/macOS):
 
 Requirements:  pyserial and serial_common.py next to this file;
                Windows additionally:  py -m pip install windows-curses
-               (Linux/macOS: curses is built in)
+               (Linux/macOS: curses is built in).
+               Or install the package:  pip install .  →  serial-tui
+               (windows-curses is then pulled in automatically on Windows).
 
 Keys:
     printable chars / Backspace   edit the TX line

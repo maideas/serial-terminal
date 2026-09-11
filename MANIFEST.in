@@ -1,0 +1,5 @@
+# Extra files for the sdist (README, LICENSE, pyproject.toml and the
+# py-modules themselves are included automatically).
+include Makefile
+include requirements.txt
+recursive-include tests *.py

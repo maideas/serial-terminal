@@ -20,7 +20,8 @@ Special input prefixes:
     \\quit           same as Ctrl+C
     \\\\text          send a line starting with a literal backslash
 
-Requirements:  pyserial, and serial_common.py next to this file.
+Requirements:  pyserial, and serial_common.py next to this file
+               (or install the package:  pip install .  →  serial-terminal).
 """
 
 import argparse

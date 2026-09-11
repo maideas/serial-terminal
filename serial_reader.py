@@ -14,7 +14,8 @@ Usage examples (Windows):
 Usage examples (Linux/macOS):
     python3 serial_reader.py -p /dev/ttyUSB0 -b 9600
 
-Requirements:  pyserial, and serial_common.py next to this file.
+Requirements:  pyserial, and serial_common.py next to this file
+               (or install the package:  pip install .  →  serial-reader).
 """
 
 import argparse

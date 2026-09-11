@@ -13,7 +13,33 @@ Three Python tools for talking to devices over a USB-to-UART adapter
 Each tool is a single script you can run directly; they share the CLI
 parsing, port selection and RX/TX helpers in
 [`serial_common.py`](serial_common.py), so copy a tool together with
-that module.
+that module — or install them as a package (next section).
+
+## Installation
+
+Either run the scripts straight from a checkout (see
+[Requirements](#requirements)), or install them as a package:
+
+```bash
+pip install .                            # from a clone of this repo
+pip install serial_terminal-0.1.0.tar.gz  # from the sdist (make dist)
+```
+
+Installing pulls in the dependencies automatically (including
+windows-curses on Windows) and puts the three tools on your `PATH` as
+commands:
+
+| Command | Replaces |
+|---------|----------|
+| `serial-tui` | `python serial_tui.py` |
+| `serial-terminal` | `python serial_terminal.py` |
+| `serial-reader` | `python serial_reader.py` |
+
+`pipx install .` installs the same commands in an isolated
+environment.
+
+To build a redistributable sdist yourself: `make dist` (writes
+`dist/serial_terminal-<version>.tar.gz`).
 
 All three share the same conventions:
 
@@ -68,6 +94,7 @@ make check     # ruff check + ruff format --check + pytest
 make test      # unit tests and pty-based integration tests
 make audit     # pip-audit against requirements.txt
 make format    # apply ruff formatting and safe fixes
+make dist      # build the sdist into dist/
 ```
 
 The tests need no hardware: [`tests/`](tests) fakes the adapter with a
