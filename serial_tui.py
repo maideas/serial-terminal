@@ -11,14 +11,17 @@ Two separate areas, so received and transmitted content never mix on screen:
     TX> GET TEMP_
      Enter: send | \\hex 41 42: raw bytes | Ctrl+C: quit
 
-Usage examples:
+Usage examples (Windows):
     py serial_tui.py                       # interactive port picker, 115200 8N1
     py serial_tui.py --list
     py serial_tui.py -p COM3 -b 9600
     py serial_tui.py -p COM3 --eol lf --hexdump
 
-Requirements:  py -m pip install pyserial windows-curses
-               (on Linux/macOS curses is built in: just pyserial)
+Usage examples (Linux/macOS):
+    python3 serial_tui.py -p /dev/ttyUSB0 -b 9600
+
+Requirements:  Windows:  py -m pip install pyserial windows-curses
+               Linux/macOS: pyserial only (curses is built in)
 
 Keys:
     printable chars / Backspace   edit the TX line
@@ -45,8 +48,10 @@ except ImportError:
 try:
     import curses
 except ImportError:
-    sys.exit("The curses module is missing (Windows). Run:  "
-             "py -m pip install windows-curses")
+    sys.exit("The curses module is missing - on Windows run:  "
+             "py -m pip install windows-curses  "
+             "(on Linux/macOS curses is part of the Python standard "
+             "library and should always be available)")
 
 EOL_CHOICES = {
     "crlf": b"\r\n",   # default for most devices / classic terminals
