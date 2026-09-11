@@ -25,8 +25,15 @@ pip install .                            # from a clone of this repo
 pip install serial_terminal-0.1.0.tar.gz  # from the sdist (make dist)
 ```
 
-Installing pulls in the dependencies automatically (including
-windows-curses on Windows) and puts the three tools on your `PATH` as
+Since this repo is public on GitHub, you can also install it directly
+without cloning anything:
+
+```bash
+pip install "git+https://github.com/maideas/serial-terminal.git"
+```
+
+Both pull in the dependencies automatically (including
+windows-curses on Windows) and put the three tools on your `PATH` as
 commands:
 
 | Command | Replaces |
@@ -36,7 +43,15 @@ commands:
 | `serial-reader` | `python serial_reader.py` |
 
 `pipx install .` installs the same commands in an isolated
-environment.
+environment; `pipx install
+"git+https://github.com/maideas/serial-terminal.git"` works too.
+
+To pin an exact version instead of tracking the default branch, install
+from a tag once the repo has one:
+
+```bash
+pip install "git+https://github.com/maideas/serial-terminal.git@v0.1.0"
+```
 
 To build a redistributable sdist yourself: `make dist` (writes
 `dist/serial_terminal-<version>.tar.gz`).
