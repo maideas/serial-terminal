@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+extend-exclude = ["build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "S", "SIM", "C4", "PL", "RUF"]
+ignore = [
+    "PLR0912", "PLR0915", "PLR2004",  # long TUI loop / magic key codes are fine here
+    "S603", "S606", "S607",            # tests spawn the tools via subprocess/execv on purpose
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

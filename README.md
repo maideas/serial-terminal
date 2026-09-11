@@ -1,7 +1,7 @@
 # serial-terminal
 
-Three standalone Python tools for talking to devices over a
-USB-to-UART adapter (FT232, CP2102, CH340, PL2303, ...), built on
+Three Python tools for talking to devices over a USB-to-UART adapter
+(FT232, CP2102, CH340, PL2303, ...), built on
 [pyserial](https://pyserial.readthedocs.io/).
 
 | Tool | RX | TX | Interface |
@@ -9,6 +9,11 @@ USB-to-UART adapter (FT232, CP2102, CH340, PL2303, ...), built on
 | [`serial_tui.py`](serial_tui.py) | line-based | text + raw hex | split-screen curses TUI |
 | [`serial_terminal.py`](serial_terminal.py) | line-based | text + raw hex | plain terminal, `TX>` prompt |
 | [`serial_reader.py`](serial_reader.py) | line-based | — | plain terminal, print only |
+
+Each tool is a single script you can run directly; they share the CLI
+parsing, port selection and RX/TX helpers in
+[`serial_common.py`](serial_common.py), so copy a tool together with
+that module.
 
 All three share the same conventions:
 
@@ -20,10 +25,18 @@ All three share the same conventions:
   `--bytesize`, `--parity`, `--stopbits` for the frame format
   (default 8N1).
 - **Display options** — `--timestamps`, `--hexdump`, `--encoding`.
-- **Clean exit** — Ctrl+C always closes the port properly; the port
-  being held by another program (PuTTY, Arduino Serial Monitor, ...)
-  or a missing/absent port produce a helpful message instead of a
-  traceback. A device unplugged mid-session is also handled.
+  Invalid values (`--encoding bogus`, `--timeout 0`, a negative baud
+  rate) are rejected by the argument parser.
+- **Safe output** — received bytes are never forwarded to your
+  terminal verbatim: control characters are shown as `\xNN`, so a
+  device (or line noise at the wrong baud rate) cannot clear your
+  screen, retitle the window or overwrite earlier output with escape
+  sequences.
+- **Clean exit** — Ctrl+C always closes the port properly; a missing
+  port and a port held by another program (PuTTY, Arduino Serial
+  Monitor, ...) are told apart by errno and produce a helpful message
+  instead of a traceback. A device unplugged mid-session ends the
+  session with the reason on stderr and exit code 1.
 
 ## Requirements
 
@@ -41,6 +54,25 @@ All three share the same conventions:
   ```
 
   (Linux and macOS have curses built in.)
+
+Pinned versions live in [`requirements.txt`](requirements.txt)
+(`pip install -r requirements.txt`).
+
+## Development
+
+[`Makefile`](Makefile) targets (needs `ruff`, `pytest` and `pip-audit`
+on `PATH`):
+
+```bash
+make check     # ruff check + ruff format --check + pytest
+make test      # unit tests and pty-based integration tests
+make audit     # pip-audit against requirements.txt
+make format    # apply ruff formatting and safe fixes
+```
+
+The tests need no hardware: [`tests/`](tests) fakes the adapter with a
+pty and drives the TUI in a pty-backed terminal
+([`tests/smoke_tui.py`](tests/smoke_tui.py)).
 
 ## serial_tui.py — split-screen TUI (RX and TX never mix)
 
@@ -67,6 +99,11 @@ Features:
 - **F1** toggles a hex dump of received lines at runtime.
 - Background reader thread: RX keeps updating while you type.
 - Status bar showing port, baud, frame format, EOL and hex state.
+- Bounded scrollback (the newest 10000 lines, `RX_HISTORY_MAX` in
+  [`serial_common.py`](serial_common.py)), so a session left running
+  for days cannot exhaust memory. Pipe
+  [`serial_reader.py`](serial_reader.py) to a file if you need a full
+  log.
 
 ```bash
 py serial_tui.py                      # pick port, 115200 8N1
@@ -76,9 +113,10 @@ py serial_tui.py -p COM3 --eol lf --hexdump --timestamps
 
 | Key | Action |
 |-----|--------|
-| printable chars / Backspace | edit the TX line |
+| printable ASCII / Backspace | edit the TX line (the TUI input line is ASCII-only; `--encoding` applies to RX and to `\hex`) |
 | Enter | send the TX line |
 | `\hex 41 42` + Enter | send raw bytes (plus configured EOL) |
+| `\\text` + Enter | send a line starting with a literal backslash |
 | `\quit` + Enter | quit |
 | F1 | toggle hex dump |
 | PgUp / PgDn | scroll the RX pane |
@@ -106,7 +144,9 @@ py serial_terminal.py -p COM3 --timestamps --hexdump
 - `--eol` controls the line ending appended to transmissions
   (`crlf` default, or `lf`/`cr`/`none`).
 - Input prefixes: `\hex 41 42` sends raw bytes (plus the configured
-  EOL), `\quit` exits — both in addition to Ctrl+C.
+  EOL, hex digits in pairs), `\quit` exits — both in addition to
+  Ctrl+C. To send a line that really starts with a backslash, double
+  it: `\\hex` transmits `\hex`.
 
 ## serial_reader.py — read-only monitor
 
@@ -126,10 +166,14 @@ py serial_reader.py -p COM3 --hexdump         # + raw bytes as hex
 - **No ports found** — check Device Manager → *Ports (COM & LPT)* on
   Windows (`ls /dev/ttyUSB*` on Linux); CH340/Prolific adapters often
   need a driver first.
-- **Access denied** — another program is holding the port open; close
-  PuTTY, the Arduino Serial Monitor, or a second terminal running one
-  of these tools.
+- **Access denied or port in use** — another program is holding the
+  port open; close PuTTY, the Arduino Serial Monitor, or a second
+  terminal running one of these tools. On Linux this message also
+  means your user is not in the `dialout` group
+  (`sudo usermod -aG dialout $USER`, then log out and back in).
 - **Garbage output** — wrong baud rate (try 9600 and 115200 first);
+  expect `\xNN` escapes in the output, since control bytes are shown
+  escaped rather than sent to your terminal;
   also verify TX/RX are crossed (adapter TX → device RX) and ground is
   common.
 - **Nothing arrives** — loop the adapter's TX to RX and use
