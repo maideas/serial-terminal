@@ -21,8 +21,16 @@ Either run the scripts straight from a checkout (see
 [Requirements](#requirements)), or install them as a package:
 
 ```bash
-pip install .                            # from a clone of this repo
-pip install serial_terminal-0.1.0.tar.gz  # from the sdist (make dist)
+git clone https://github.com/maideas/serial-terminal.git
+cd serial-terminal
+pip install .
+```
+
+or install the sdist directly (see `make dist` at the end of this
+section for how to build one):
+
+```bash
+pip install serial_terminal-0.1.0.tar.gz
 ```
 
 Since this repo is public on GitHub, you can also install it directly
