@@ -7,6 +7,7 @@ sanitising behave identically in all three tools.
 
 import argparse
 import codecs
+import contextlib
 import errno
 import re
 import sys
@@ -29,6 +30,26 @@ EOL_CHOICES = {
 
 # Upper bound for the number of RX entries the TUI keeps in memory.
 RX_HISTORY_MAX = 10_000
+
+
+def make_output_safe():
+    """Make stdout/stderr tolerant of text the terminal encoding cannot show.
+
+    Received bytes are decoded with errors="replace", but *printing* could
+    still raise UnicodeEncodeError when the terminal itself uses a narrow
+    encoding (e.g. a cp1252 Windows console receiving CJK text). Show a
+    replacement character instead of crashing with a traceback.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if stream is None:  # e.g. pythonw on Windows has no stdout
+            continue
+        # not every stream is a reconfigurable TextIOWrapper (pytest capture, ...)
+        with contextlib.suppress(AttributeError, ValueError):
+            stream.reconfigure(errors="replace")
+
+
+# Called at import so every tool gets it without remembering to call it.
+make_output_safe()
 
 
 # --------------------------------------------------------------------------
@@ -256,9 +277,11 @@ def build_tx_payload(user_input, args):
     """
     user_input = user_input.rstrip("\r\n")
     eol = EOL_CHOICES[args.eol]
-    command, _, rest = user_input.partition(" ")
+    parts = user_input.split(None, 1)  # split on any whitespace, not just space
+    command = parts[0] if parts else ""
+    rest = parts[1] if len(parts) > 1 else ""
     lowered = command.lower()
-    if lowered == r"\quit" and not rest.strip():
+    if lowered == r"\quit" and not rest:
         return None
     if lowered == r"\hex":
         tokens = rest.split()

@@ -48,6 +48,35 @@ def test_reader_sanitizes_escape_sequences():
     assert r"\x1b]0;PWNED\x07text\x1b[2J" in out
 
 
+def test_reader_survives_unencodable_terminal():
+    # regression: a narrow-encoding terminal (e.g. cp1252 console showing CJK,
+    # faked here with PYTHONIOENCODING=ascii) must show replacement
+    # characters, not crash with a UnicodeEncodeError traceback
+    master, slave = pty.openpty()
+    env = {**ENV, "PYTHONIOENCODING": "ascii"}
+    proc = subprocess.Popen(
+        [
+            sys.executable,
+            str(ROOT / "serial_reader.py"),
+            "-p",
+            os.ttyname(slave),
+            "--timeout",
+            "0.2",
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=env,
+    )
+    time.sleep(0.6)
+    os.write(master, "temperatur 21.7 \u00b0C\n".encode())
+    time.sleep(0.4)
+    proc.terminate()
+    out = finish(proc)
+    assert "21.7 ?C" in out
+    assert "Traceback" not in out
+
+
 def test_reader_reports_unplug():
     proc, master, slave = start("serial_reader.py")
     os.write(master, b"first\n")

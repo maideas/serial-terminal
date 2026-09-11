@@ -113,6 +113,20 @@ def _wrap(text, width):
     return lines
 
 
+def _terminal_encodable(text, encoding):
+    """Replace characters the terminal cannot display.
+
+    curses encodes with the *locale* encoding, which can be narrower than
+    the serial --encoding (e.g. an ASCII/C locale console receiving CJK);
+    a plain addnstr would raise UnicodeEncodeError and kill the TUI.
+    """
+    try:
+        text.encode(encoding)
+    except UnicodeEncodeError:
+        return text.encode(encoding, errors="replace").decode(encoding, errors="replace")
+    return text
+
+
 def visible_rx_lines(entries, width, hexdump, offset, inner_h):
     """Flatten entries into display lines (wrapped), return the visible slice.
 
@@ -233,8 +247,9 @@ def tui_main(stdscr, ser, args, rx_q, stop_event, error):  # noqa: PLR0913, PLR0
         inner_w = w - 4
         vis, max_offset = visible_rx_lines(entries, inner_w, hexdump, offset, inner_h)
         offset = min(offset, max_offset)
+        enc = getattr(rx_win, "encoding", None) or getattr(sys.stdout, "encoding", None) or "utf-8"
         for i, txt in enumerate(vis):
-            rx_win.addnstr(1 + i, 1, txt, inner_w, curses.A_NORMAL)
+            rx_win.addnstr(1 + i, 1, _terminal_encodable(txt, enc), inner_w, curses.A_NORMAL)
         rx_win.refresh()
 
         # TX input line (row h-3) and hints (row h-2)

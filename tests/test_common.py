@@ -46,6 +46,12 @@ def test_quit():
     assert sc.build_tx_payload(r"\quit now", tx_args("none")) == rb"\quit now"
 
 
+def test_commands_accept_tab_separator():
+    # tab counts as the command separator, not part of the command word
+    assert sc.build_tx_payload("\\hex\t41 42", tx_args("none")) == b"AB"
+    assert sc.build_tx_payload("\\quit\t", tx_args()) is None
+
+
 def test_literal_backslash_escape():
     assert sc.build_tx_payload(r"\\hex 41", tx_args("none")) == rb"\hex 41"
 
@@ -137,3 +143,9 @@ def test_visible_rx_lines_hexdump_toggle_rewraps():
     assert lines == ["t", "hex: 01"]
     lines, _ = serial_tui.visible_rx_lines(entries, 80, False, 0, 5)
     assert lines == ["t"]
+
+
+def test_terminal_encodable_replaces_unencodable():
+    # a CJK / degree character on an ASCII-locale console must not crash addnstr
+    assert serial_tui._terminal_encodable("21.7 \u00b0C \u65e5", "ascii") == "21.7 ?C ?"
+    assert serial_tui._terminal_encodable("21.7 \u00b0C", "utf-8") == "21.7 \u00b0C"
