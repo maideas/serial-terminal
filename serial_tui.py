@@ -3,15 +3,13 @@
 
 Two separate areas, so received and transmitted content never mix on screen:
 
-    +--------------------------------------------------------------+
-    | COM3 @ 115200 8N1 | eol=CRLF | F1:hex on | PgUp/PgDn: scroll |
-    +--- RX -------------------------------------------------------+
-    | 20:12:36 heartbeat 2                                         |
-    | 20:12:37 TEMP=21.7C                                          |
-    +--------------------------------------------------------------+
+    COM3 @ 115200 8N1 | eol=CRLF | F1:hex on | PgUp/PgDn: scroll
+    +--- RX ---------------------------------------------------------
+    | 20:12:36 heartbeat 2
+    | 20:12:37 TEMP=21.7C
+    +----------------------------------------------------------------
     TX> GET TEMP_
-    | Enter: send | \\hex 41 42: raw bytes | Ctrl+C: quit
-    +--------------------------------------------------------------+
+     Enter: send | \\hex 41 42: raw bytes | Ctrl+C: quit
 
 Usage examples:
     py serial_tui.py                       # interactive port picker, 115200 8N1
@@ -282,7 +280,7 @@ def tui_main(stdscr, ser, args, rx_q, stop_event):
                   f" | F1:hex {'on' if hexdump else 'off'}"
                   f" | PgUp/PgDn: scroll")
         stdscr.erase()
-        stdscr.addnstr(0, 0, status, w - 1, curses.A_REVERSE)
+        stdscr.addnstr(0, 0, status.ljust(w - 1), w - 1, curses.A_REVERSE)
 
         # RX pane with border (rows 1 .. h-4)
         rx_h = h - 4
